@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  ADMIN
+}
+
+model User {
+  id           String           @id @default(cuid())
+  name         String
+  email        String           @unique
+  passwordHash String           @map("password_hash")
+  role         Role
+  createdAt    DateTime         @default(now()) @map("created_at")
+  counts       InventoryCount[]
+
+  @@index([role])
+  @@map("users")
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  createdAt DateTime  @default(now()) @map("created_at")
+  products  Product[]
+
+  @@map("categories")
+}
+
+model Supplier {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  contactName String?   @map("contact_name")
+  email       String?
+  phone       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  products    Product[]
+
+  @@map("suppliers")
+}
+
+model Product {
+  id            String           @id @default(cuid())
+  name          String
+  barcode       String?
+  productType   String?          @map("product_type")
+  unit          String
+  purchasePrice Float            @default(0) @map("purchase_price")
+  minimumLevel  Float            @default(0) @map("minimum_level")
+  currentStock  Float            @default(0) @map("current_stock")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  categoryId    String           @map("category_id")
+  supplierId    String?          @map("supplier_id")
+  category      Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  supplier      Supplier?        @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  counts        InventoryCount[]
+
+  @@index([name])
+  @@index([categoryId])
+  @@map("products")
+}
+
+model InventoryCount {
+  id        String   @id @default(cuid())
+  quantity  Float
+  countedAt DateTime @default(now()) @map("counted_at")
+  productId String   @map("product_id")
+  userId    String   @map("user_id")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([productId, countedAt])
+  @@index([userId, countedAt])
+  @@map("inventory_counts")
+}
