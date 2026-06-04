@@ -26,7 +26,6 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=8080
 ENV DATABASE_URL=file:/data/dev.db
 
 COPY --from=builder /app/.next/standalone ./
@@ -36,6 +35,6 @@ COPY --from=builder /app/scripts ./scripts
 
 RUN mkdir -p /data
 
-EXPOSE 8080
+EXPOSE 3000
 
 CMD ["sh", "-c", "python3 scripts/setup_db.py && node server.js"]
